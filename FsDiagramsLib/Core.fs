@@ -1,0 +1,3 @@
+﻿namespace FsDiagrams
+
+//module Core
