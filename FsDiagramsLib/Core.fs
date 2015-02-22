@@ -1,3 +1,15 @@
 ﻿namespace FsDiagrams
 
-//module Core
+module Core =
+
+    type Node = Node
+
+    type Path =
+        | Line of Node * Node
+        | Curve of Node * Node
+
+    let LineTo (source:Node) (dest:Node) : Path =
+        Line (source, dest)
+
+    let CurveTo (source:Node) (dest:Node) : Path =
+        Curve (source, dest)
