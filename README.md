@@ -1,2 +1,2 @@
 # FsDiagrams
-A diagramming framework for F#
+A diagramming framework for F#.
