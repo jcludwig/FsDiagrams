@@ -99,7 +99,7 @@ type SvgWriter() =
         }
         let element =
             new XElement(
-                xname "line",
+                svgns + "line",
                 attrs |> Seq.map (fun (name, value) -> new XAttribute(xname name, value)) |> Seq.toArray)
         parent.Add(element)
 

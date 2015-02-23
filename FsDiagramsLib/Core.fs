@@ -2,7 +2,8 @@
 
 module Core =
 
-    type Node = Node
+    type Node =
+        | Point of float * float
 
     type Path =
         | Line of Node * Node
