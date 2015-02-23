@@ -5,10 +5,17 @@ open System.IO
 
 open FsDiagrams
 
+module Utils =
+    let public xname (name:string) =
+        XName.Get(name)
+
+open Utils
+
 module KnownColors =
     let Red = "red"
     let Green = "green"
     let Blue = "blue"
+    let Black = "black"
 
 type Color =
     | NamedColor of string
@@ -39,7 +46,16 @@ type LineData = {
     stroke_width : float option;
     stroke_dasharray : int list option;
     stroke_linecap : LineCap option;
-}
+    }
+    with
+    static member Default = {
+        x1 = 0; y1 = 0;
+        x2 = 0; y2 = 0;
+        stroke = Some( NamedColor( KnownColors.Black ) );
+        stroke_width = None;
+        stroke_dasharray = None;
+        stroke_linecap = None;
+    }
 
 type GraphicsElement =
     | Path
@@ -58,15 +74,12 @@ type Element =
 
 type Document = {
     Elements : Element list
-}
+    }
 
 type SvgWriter() =
     let xdoc = new XDocument()
     let svgns = XNamespace.Get(@"http://www.w3.org/2000/svg")
     let svgroot = xdoc.Add(new XElement(svgns + "svg"))
-
-    let xname (name:string) =
-        XName.Get(name)
 
     let WriteLine (data:LineData) (parent:XElement) =
         let attrs:seq<string * string> = seq {
