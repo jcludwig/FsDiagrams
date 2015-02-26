@@ -5,6 +5,8 @@ open Microsoft.VisualStudio.TestTools.UnitTesting
 open NUnit.Framework.Constraints
 open System.Xml.Linq
 
+open FsDiagrams
+open FsDiagrams.Core
 open FsDiagrams.Svg
 open FsDiagrams.Svg.Utils
 
@@ -49,22 +51,34 @@ open FsUnitEx
 
 [<TestClass>]
 type SvgTests() =
-    
+    let defaultPath = 
+        {
+        path = Line(point 0 0, point 0 0);
+        stroke = None;
+        stroke_width = None;
+        stroke_dasharray = None;
+        stroke_linecap = None;
+        }
+
+    let emptyDiagram = 
+        {
+        Elements = []
+        }
+
     [<TestMethod>]
     member this.``Basic document has svg root``() =
-        let xdoc = (new SvgWriter()).GetDocument()
+        let xdoc = SvgWriter.writeDiagram emptyDiagram
         xdoc.Root.Name.LocalName |> should equal "svg"
         xdoc.Root.Name.Namespace.NamespaceName |> should equal @"http://www.w3.org/2000/svg"
 
     [<TestMethod>]
     member this.``Write Line``() =
-        let writer = new SvgWriter()
-        let doc = {
-            Elements = [ GraphicsElement(Line({ LineData.Default with x1 = 1; y1 = 2; x2 = 3; y2 = 4 })) ]
-        }
-        writer.WriteDocument(doc)
-        let xdoc = writer.GetDocument()
-        let line = xdoc.Root.Element(xname "line")
+        let diagram = 
+            {
+            Elements = [ GraphicsElement( Path { defaultPath with path = Line(point 1 2, point 3 4) } ) ]
+            }
+        let xdoc = SvgWriter.writeDiagram diagram
+        let line = xdoc.Root.Element(svgname "line")
         line |> should haveAttributes [ ("x1", "1"); ("y1", "2"); ("x2", "3"); ("y2", "4") ]
 
 [<TestClass>]
@@ -73,22 +87,22 @@ type ColorTests() =
     [<TestMethod>]
     member this.``NamedColor ToString``() =
         let color = Color.NamedColor("red")
-        color.ToString() |> should equal "red"
+        SvgWriter.colorString color |> should equal "red"
         
     [<TestMethod>]
     member this.``HexRgb ToString``() =
         let color = Color.HexRgb("#ff00aa")
-        color.ToString() |> should equal "#ff00aa"
+        SvgWriter.colorString color |> should equal "#ff00aa"
 
     [<TestMethod>]
     member this.``Rgb ToString``() =
         let color = Color.Rgb(255uy, 0uy, 128uy)
-        color.ToString() |> should equal "rgb(255, 0, 128)"
+        SvgWriter.colorString color |> should equal "rgb(255, 0, 128)"
 
     [<TestMethod>]
     member this.``RgbPercentage ToString``() =
         let color = Color.RgbPercentage(100M, 0.0M, 50.501M)
-        color.ToString() |> should equal "rgb(100%, 0.0%, 50.501%)"
+        SvgWriter.colorString color |> should equal "rgb(100%, 0.0%, 50.501%)"
 
 [<TestClass>]
 type LineCapTests() =
@@ -96,4 +110,4 @@ type LineCapTests() =
     [<TestMethod>]
     member this.``Round ToString``() =
         let linecap = LineCap.Round
-        linecap.ToString() |> should equal "round"
+        SvgWriter.linecapString linecap |> should equal "round"
