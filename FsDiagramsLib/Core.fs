@@ -16,46 +16,48 @@ type Color =
     | Rgb of byte * byte * byte
     | RgbPercentage of decimal * decimal * decimal
 
-type Path =
+type PathDefinition =
     | Line of Point * Point
     | Rect of Point * Point
 
 type LineCap =
     | Round
 
-type DecoratedPath = 
+type Diagram =
+    | Path of Path
+    | Text
+    | Image
+    | Use
+    | Empty
+
+and IDiagramComponent =
+    abstract member AsDiagramComponent : unit -> Diagram
+
+and Path = 
     {
-    path : Path;
+    pathDef : PathDefinition;
     stroke : Color option;
     stroke_width : decimal option;
     stroke_dasharray : int list option;
     stroke_linecap : LineCap option;
     }
-
-type GraphicsElement =
-    | Path of DecoratedPath
-    | Text
-    | Image
-    | Use
-
-type Element =
-    | GraphicsElement of GraphicsElement
-
-type Diagram = 
-    {
-    Elements : Element list
-    }
-    static member (+) (left:Diagram, right:Diagram) =
-        ()
+    with
+        interface IDiagramComponent with
+            member this.AsDiagramComponent() = Path this
 
 module Core =
 
     let inline point x y =
         (float x, float y)
 
-    let toPath path = 
+    let inline diagram (cmp:IDiagramComponent) =
+        cmp.AsDiagramComponent()
+
+module Paths =
+
+    let path def = 
         {
-        path = path
+        pathDef = def
         stroke = Some( NamedColor( KnownColors.Black ) );
         stroke_width = None;
         stroke_dasharray = None;
@@ -63,14 +65,7 @@ module Core =
         }
 
     let line (source:Point) (dest:Point) =
-        Path.Line(source, dest)
+        PathDefinition.Line(source, dest)
 
-    let lineWidth w line =
-        { line with stroke_width = Some(w) }
-
-    let diagram elements =
-        { Elements = elements } : Diagram
-
-    let appendElement diagram element =
-        { diagram with Elements = element :: diagram.Elements }
-
+    let lineWidth w path =
+        { path with stroke_width = Some(w) }

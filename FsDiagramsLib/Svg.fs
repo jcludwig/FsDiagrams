@@ -18,19 +18,21 @@ open Utils
 
 module SvgWriter =
 
-    let colorString = function
+    let colorString = 
+        function
         | NamedColor c -> c
         | HexRgb c -> c
         | Rgb (r, g, b) -> sprintf "rgb(%i, %i, %i)" r g b
         | RgbPercentage (r, g, b) -> sprintf "rgb(%M%%, %M%%, %M%%)" r g b
 
-    let linecapString = function
+    let linecapString =
+        function
         | Round -> "round"
 
-    let WriteDecoratedPath (dpath:DecoratedPath) (parent:XElement) =
+    let writePath (parent:XElement) (path:Path) =
         let attrs:seq<string * string> = 
             seq {
-            match dpath.path with
+            match path.pathDef with
                 | Line (p1, p2) -> 
                     let (x1, y1) = p1
                     let (x2, y2) = p2
@@ -40,13 +42,13 @@ module SvgWriter =
                     yield ("y2", string y2)
                 | _ -> failwith "Path not supported."
 
-            match dpath.stroke with
+            match path.stroke with
                 | Some stroke -> yield("stroke", colorString stroke)
                 | None -> ()
-            match dpath.stroke_dasharray with
+            match path.stroke_dasharray with
                 | Some dasharray -> yield("stroke-dasharray", dasharray |> Seq.map string |> String.concat ",")
                 | None -> ()
-            match dpath.stroke_linecap with
+            match path.stroke_linecap with
                 | Some linecap -> yield("stroke-linecap", linecapString linecap)
                 | None -> ()
             }
@@ -56,18 +58,16 @@ module SvgWriter =
                 attrs |> Seq.map (fun (name, value) -> new XAttribute(xname name, value)) |> Seq.toArray)
         parent.Add(element)
 
-    let WriteGraphicsElement (el:GraphicsElement) (parent:XElement) =
-        match el with
-            | Path dpath -> WriteDecoratedPath dpath parent
-            | _ ->  failwith "Element not supported."
-
-    let WriteElement (el:Element) (parent:XElement) =
-        match el with
-            | GraphicsElement e -> WriteGraphicsElement e parent
-
     let writeDiagram (diagram:Diagram) =
         let xdoc = new XDocument()
-        let svgroot = xdoc.Add(new XElement(svgname "svg"))
-        diagram.Elements
-            |> List.iter (fun el -> WriteElement el xdoc.Root)
+        let svgroot = new XElement(svgname "svg")
+        xdoc.Add(svgroot)
+        
+        let rec writeElement d =
+            match d with
+            | Path path -> writePath svgroot path
+            | Empty -> () 
+            | _ -> failwith "Diagram type not supported."
+        
+        writeElement diagram
         xdoc

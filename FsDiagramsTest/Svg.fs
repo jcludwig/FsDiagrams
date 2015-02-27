@@ -53,30 +53,23 @@ open FsUnitEx
 type SvgTests() =
     let defaultPath = 
         {
-        path = Line(point 0 0, point 0 0);
+        pathDef = Line(point 0 0, point 0 0);
         stroke = None;
         stroke_width = None;
         stroke_dasharray = None;
         stroke_linecap = None;
         }
 
-    let emptyDiagram = 
-        {
-        Elements = []
-        }
-
     [<TestMethod>]
     member this.``Basic document has svg root``() =
-        let xdoc = SvgWriter.writeDiagram emptyDiagram
+        let xdoc = SvgWriter.writeDiagram Diagram.Empty
         xdoc.Root.Name.LocalName |> should equal "svg"
         xdoc.Root.Name.Namespace.NamespaceName |> should equal @"http://www.w3.org/2000/svg"
 
     [<TestMethod>]
     member this.``Write Line``() =
         let diagram = 
-            {
-            Elements = [ GraphicsElement( Path { defaultPath with path = Line(point 1 2, point 3 4) } ) ]
-            }
+            Path { defaultPath with pathDef = Line(point 1 2, point 3 4) }
         let xdoc = SvgWriter.writeDiagram diagram
         let line = xdoc.Root.Element(svgname "line")
         line |> should haveAttributes [ ("x1", "1"); ("y1", "2"); ("x2", "3"); ("y2", "4") ]
