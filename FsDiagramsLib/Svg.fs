@@ -14,6 +14,12 @@ module Utils =
     let svgname (name:string) =
         svgns + name
 
+    let makeAttr ((name, value):string*string) =
+        XAttribute(xname name, value)
+
+    let makeAttrs =
+        Seq.map makeAttr
+
 open Utils
 
 module SvgWriter =
@@ -28,20 +34,27 @@ module SvgWriter =
     let linecapString =
         function
         | Round -> "round"
+        
+    let writeLine (Line (p1, p2) as line) =
+        let (x1, y1) = p1
+        let (x2, y2) = p2
+        let attrs = [
+            ("x1", string x1);
+            ("y1", string y1);
+            ("x2", string x2);
+            ("y2", string y2);
+            ]
+        XElement(svgname "line", attrs |> makeAttrs)
+
+    let writePathDef (pathDef:PathDefinition) =
+        match pathDef with
+        | PathDefinition.Line l -> writeLine l
+        | _ -> failwith "Path not supported."
 
     let writePath (parent:XElement) (path:Path) =
-        let attrs:seq<string * string> = 
-            seq {
-            match path.pathDef with
-                | Line (p1, p2) -> 
-                    let (x1, y1) = p1
-                    let (x2, y2) = p2
-                    yield ("x1", string x1)
-                    yield ("y1", string y1)
-                    yield ("x2", string x2)
-                    yield ("y2", string y2)
-                | _ -> failwith "Path not supported."
+        let xpath = writePathDef path.pathDef
 
+        let strokeAttrs = [
             match path.stroke with
                 | Some stroke -> yield("stroke", colorString stroke)
                 | None -> ()
@@ -51,12 +64,10 @@ module SvgWriter =
             match path.stroke_linecap with
                 | Some linecap -> yield("stroke-linecap", linecapString linecap)
                 | None -> ()
-            }
-        let element =
-            new XElement(
-                svgname "line",
-                attrs |> Seq.map (fun (name, value) -> new XAttribute(xname name, value)) |> Seq.toArray)
-        parent.Add(element)
+            ]
+        
+        strokeAttrs |> makeAttrs |> Seq.toArray |> xpath.Add
+        parent.Add(xpath)
 
     let writeDiagram (diagram:Diagram) =
         let xdoc = new XDocument()

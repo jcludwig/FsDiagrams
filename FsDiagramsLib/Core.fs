@@ -16,22 +16,42 @@ type Color =
     | Rgb of byte * byte * byte
     | RgbPercentage of decimal * decimal * decimal
 
-type PathDefinition =
-    | Line of Point * Point
-    | Rect of Point * Point
+type IPathLike =
+    abstract member AsPathDefinition : unit -> PathDefinition
+
+and PathDefinition =
+    | Line of Line
+    | Rect of Rect
+    with
+    interface IPathLike with
+        member this.AsPathDefinition() = this
+
+and Line = Line of Point * Point
+    with
+    interface IPathLike with
+        member this.AsPathDefinition() = PathDefinition.Line this
+
+and Rect = Rect of Point * Point
+    with
+    interface IPathLike with
+        member this.AsPathDefinition() = PathDefinition.Rect this
 
 type LineCap =
     | Round
 
-type Diagram =
+type IDiagramComponent =
+    abstract member AsDiagramComponent : unit -> Diagram
+
+and Diagram =
     | Path of Path
     | Text
     | Image
     | Use
     | Empty
-
-and IDiagramComponent =
-    abstract member AsDiagramComponent : unit -> Diagram
+    | Compound of CompoundDiagram
+    with
+    interface IDiagramComponent with
+        member this.AsDiagramComponent() = this
 
 and Path = 
     {
@@ -42,22 +62,31 @@ and Path =
     stroke_linecap : LineCap option;
     }
     with
-        interface IDiagramComponent with
-            member this.AsDiagramComponent() = Path this
+    interface IDiagramComponent with
+        member this.AsDiagramComponent() = Path this
+
+and CompoundDiagram =
+    | Overlay of Diagram list
+    with
+    interface IDiagramComponent with
+        member this.AsDiagramComponent() = Compound this
 
 module Core =
 
     let inline point x y =
-        (float x, float y)
+        (float x, float y) : Point
 
     let inline diagram (cmp:IDiagramComponent) =
         cmp.AsDiagramComponent()
 
+    let overlay diagrams =
+        Overlay diagrams
+
 module Paths =
 
-    let path def = 
+    let path (def:IPathLike) = 
         {
-        pathDef = def
+        pathDef = def.AsPathDefinition()
         stroke = Some( NamedColor( KnownColors.Black ) );
         stroke_width = None;
         stroke_dasharray = None;
@@ -65,7 +94,10 @@ module Paths =
         }
 
     let line (source:Point) (dest:Point) =
-        PathDefinition.Line(source, dest)
+        Line.Line (source, dest)
+
+    let rect (topleft:Point) (bottomright:Point) =
+        Rect.Rect (topleft, bottomright)
 
     let lineWidth w path =
         { path with stroke_width = Some(w) }
