@@ -25,12 +25,13 @@ let d1 =
 
 let d2 =
     match l with
-    | Line (p1, p2) -> rect p1 p2
+    | Line (p1, p2) -> rectByPoints p1 p2
     |> path
     |> lineWidth 5M
+    |> (fun x -> { x with stroke = Some( NamedColor( KnownColors.Green) ) } )
     |> diagram
     
-let d3 = overlay [d1; d2] |> diagram
+let d3 = overlay [d2; d1] |> diagram
 let xdoc = SvgWriter.writeDiagram d3
 let svgFile = @"c:\tmp\test.svg" //System.IO.Path.GetTempFileName( ) + ".svg"
 xdoc.Save( svgFile )

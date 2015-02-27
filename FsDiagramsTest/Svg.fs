@@ -53,7 +53,7 @@ open FsUnitEx
 type SvgTests() =
     let defaultPath = 
         {
-        pathDef = PathDefinition.Line( Line(point 0 0, point 0 0) );
+        pathDef = LinePath( Line(point 0 0, point 0 0) );
         stroke = None;
         stroke_width = None;
         stroke_dasharray = None;
@@ -69,10 +69,18 @@ type SvgTests() =
     [<TestMethod>]
     member this.``Write Line``() =
         let diagram = 
-            Path { defaultPath with pathDef = PathDefinition.Line( Line(point 1 2, point 3 4) ) }
+            Path { defaultPath with pathDef = LinePath( Line(point 1 2, point 3 4) ) }
         let xdoc = SvgWriter.writeDiagram diagram
         let line = xdoc.Root.Element(svgname "line")
         line |> should haveAttributes [ ("x1", "1"); ("y1", "2"); ("x2", "3"); ("y2", "4") ]
+
+    [<TestMethod>]
+    member this.``Write Rect``() =
+        let diagram = 
+            Path { defaultPath with pathDef = RectPath( Rect (point 1 2, size 3 4) ) }
+        let xdoc = SvgWriter.writeDiagram diagram
+        let line = xdoc.Root.Element(svgname "rect")
+        line |> should haveAttributes [ ("x", "1"); ("y", "2"); ("width", "3"); ("height", "4") ]
 
 [<TestClass>]
 type ColorTests() =
