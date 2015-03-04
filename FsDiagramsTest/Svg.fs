@@ -54,10 +54,13 @@ type SvgTests() =
     let defaultPath = 
         {
         pathDef = LinePath( Line(point 0 0, point 0 0) );
-        stroke = None;
-        stroke_width = None;
-        stroke_dasharray = None;
-        stroke_linecap = None;
+        strokeAttrs = 
+            {
+            Color = None;
+            Width = None;
+            DashArray = None;
+            LineCap = None;
+            }
         }
 
     [<TestMethod>]

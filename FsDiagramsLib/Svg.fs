@@ -62,19 +62,20 @@ module SvgWriter =
         match pathDef with
         | LinePath l -> writeLine l
         | RectPath r -> writeRect r
-        | _ -> failwith "Path not supported."
+        //| _ -> failwith "Path not supported."
 
     let writePath (xparent:XElement) (path:Path) =
         let xpath = writePathDef path.pathDef
 
+        let strokeAttrs = path.strokeAttrs
         let strokeAttrs = [
-            match path.stroke with
+            match strokeAttrs.Color with
                 | Some stroke -> yield("stroke", colorString stroke)
                 | None -> ()
-            match path.stroke_dasharray with
+            match strokeAttrs.DashArray with
                 | Some dasharray -> yield("stroke-dasharray", dasharray |> Seq.map string |> String.concat ",")
                 | None -> ()
-            match path.stroke_linecap with
+            match strokeAttrs.LineCap with
                 | Some linecap -> yield("stroke-linecap", linecapString linecap)
                 | None -> ()
             ]

@@ -14,13 +14,9 @@ type Point = Point of float * float
         let (Point (x2, y2)) = right
         Size (x1 - x2, y1 - y2)
 
-// TODO -- angles, unit of measurement? deg, rad
+type Line = Line of Point * Point
 
-module KnownColors =
-    let Red = "red"
-    let Green = "green"
-    let Blue = "blue"
-    let Black = "black"
+type Rect = Rect of Point * Size
 
 type Color =
     | NamedColor of string
@@ -28,61 +24,53 @@ type Color =
     | Rgb of byte * byte * byte
     | RgbPercentage of decimal * decimal * decimal
 
-type IPathLike =
-    abstract member AsPathDefinition : unit -> PathDefinition
-
-and PathDefinition =
-    | LinePath of Line
-    | RectPath of Rect
-    with
-    interface IPathLike with
-        member this.AsPathDefinition() = this
-
-and Line = Line of Point * Point
-    with
-    interface IPathLike with
-        member this.AsPathDefinition() = LinePath this
-
-and Rect = Rect of Point * Size
-    with
-    interface IPathLike with
-        member this.AsPathDefinition() = RectPath this
+module KnownColors =
+    let Red = NamedColor "red"
+    let Green = NamedColor "green"
+    let Blue = NamedColor "blue"
+    let Black = NamedColor "black"
 
 type LineCap =
     | Round
 
-type IDiagramComponent =
-    abstract member AsDiagramComponent : unit -> Diagram
+type StrokeAttributes =
+    {
+    Color : Color option;
+    Width : decimal option;
+    DashArray : int list option;
+    LineCap : LineCap option;
+    }
+    with
+        static member DefaultWidth = 0M
+        static member Default = 
+            {
+            Color = Some(KnownColors.Black);
+            Width = Some(1M);
+            DashArray = None;
+            LineCap = None;
+            }
 
-and Diagram =
+type PathDefinition =
+    | LinePath of Line
+    | RectPath of Rect
+
+type Path = 
+    {
+    pathDef : PathDefinition;
+    strokeAttrs : StrokeAttributes;
+    }
+
+type Diagram =
     | Path of Path
     | Text
     | Image
     | Use
     | Empty
     | Compound of CompoundDiagram
-    with
-    interface IDiagramComponent with
-        member this.AsDiagramComponent() = this
-
-and Path = 
-    {
-    pathDef : PathDefinition;
-    stroke : Color option;
-    stroke_width : decimal option;
-    stroke_dasharray : int list option;
-    stroke_linecap : LineCap option;
-    }
-    with
-    interface IDiagramComponent with
-        member this.AsDiagramComponent() = Path this
-
+    
 and CompoundDiagram =
     | Overlay of Diagram list
-    with
-    interface IDiagramComponent with
-        member this.AsDiagramComponent() = Compound this
-
+    
 module Core =
 
     let inline point x y =
@@ -99,32 +87,35 @@ module Core =
     let inline size w h =
         Size (float w, float h)
 
-    let inline diagram (cmp:IDiagramComponent) =
-        cmp.AsDiagramComponent()
-
     let overlay diagrams =
         Overlay diagrams
 
 module Paths =
 
-    let path (def:IPathLike) = 
-        {
-        pathDef = def.AsPathDefinition()
-        stroke = Some( NamedColor( KnownColors.Black ) );
-        stroke_width = None;
-        stroke_dasharray = None;
-        stroke_linecap = None;
-        }
+    let path pathDef =
+        { pathDef = pathDef; strokeAttrs = StrokeAttributes.Default }
 
     let line (source:Point) (dest:Point) =
         Line.Line (source, dest)
 
     let rect topleft size =
-        Rect (topleft, size)
+        Rect.Rect (topleft, size)
 
     let rectByPoints (topleft:Point) (bottomright:Point) =
         let size = bottomright - topleft
         rect topleft size
 
-    let lineWidth w path =
-        { path with stroke_width = Some(w) }
+    let pathWithStrokeAttrs path attrs =
+        { path with strokeAttrs = attrs }
+
+    let pathWidth w path =
+        pathWithStrokeAttrs path { path.strokeAttrs with Width = Some w }
+
+    let pathColor color path =
+        pathWithStrokeAttrs path { path.strokeAttrs with Color = Some color }
+
+//    let fillColor color path =
+//        pathWithStrokeAttrs path { path.strokeAttrs with }
+
+    let pathToDiagram path =
+        Diagram.Path path

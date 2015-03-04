@@ -19,19 +19,22 @@ let l = line (point 10.0 10.0) (point 100.0 100.0)
 
 let d1 = 
     l 
+    |> LinePath
     |> path
-    |> lineWidth 10M
-    |> diagram
+    |> pathWidth 10M
+    |> pathToDiagram
 
 let d2 =
     match l with
     | Line (p1, p2) -> rectByPoints p1 p2
+    |> RectPath
     |> path
-    |> lineWidth 5M
-    |> (fun x -> { x with stroke = Some( NamedColor( KnownColors.Green) ) } )
-    |> diagram
+    |> pathWidth 5M
+    |> pathColor KnownColors.Green
+    |> fillColor KnownColors.Red
+    |> pathToDiagram
     
-let d3 = overlay [d2; d1] |> diagram
+let d3 = overlay [d2; d1] |> Diagram.Compound
 let xdoc = SvgWriter.writeDiagram d3
 let svgFile = @"c:\tmp\test.svg" //System.IO.Path.GetTempFileName( ) + ".svg"
 xdoc.Save( svgFile )
