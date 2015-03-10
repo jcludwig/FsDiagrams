@@ -18,17 +18,15 @@ let doc = {
 let l = line (point 10.0 10.0) (point 100.0 100.0)
 
 let d1 = 
-    l 
-    |> LinePath
-    |> path
+    l
+    |> Lines.path
     |> pathWidth 10M
     |> pathToDiagram
 
 let d2 =
     match l with
     | Line (p1, p2) -> rectByPoints p1 p2
-    |> RectPath
-    |> path
+    |> Rects.path
     |> pathWidth 5M
     |> pathColor KnownColors.Green
     |> fillColor KnownColors.Red

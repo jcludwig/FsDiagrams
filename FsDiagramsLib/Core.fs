@@ -50,15 +50,10 @@ type StrokeAttributes =
             LineCap = None;
             }
 
-type PathDefinition =
-    | LinePath of Line
-    | RectPath of Rect
-
-type Path = 
-    {
-    pathDef : PathDefinition;
-    strokeAttrs : StrokeAttributes;
-    }
+type Path =
+    | Line of Line
+    | Rect of Rect
+    // shapes, polyline, etc
 
 type Diagram =
     | Path of Path
@@ -106,16 +101,26 @@ module Paths =
         rect topleft size
 
     let pathWithStrokeAttrs path attrs =
-        { path with strokeAttrs = attrs }
+        new Path(attrs)
 
     let pathWidth w path =
-        pathWithStrokeAttrs path { path.strokeAttrs with Width = Some w }
+        pathWithStrokeAttrs path { path.StrokeAttributes with Width = Some w }
 
     let pathColor color path =
         pathWithStrokeAttrs path { path.strokeAttrs with Color = Some color }
 
-//    let fillColor color path =
-//        pathWithStrokeAttrs path { path.strokeAttrs with }
+    let fillColor color closedPath =
+        pathWithStrokeAttrs path { path.strokeAttrs with }
 
     let pathToDiagram path =
         Diagram.Path path
+
+module Lines =
+
+    let path line =
+        Paths.path (LinePath line)
+
+module Rects =
+    
+    let path rect = 
+        Paths.path (RectPath rect)
